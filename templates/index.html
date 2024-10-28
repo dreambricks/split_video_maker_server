@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Vídeos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #1c1c1c;
+            font-size: 24px;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Estilo para ambos os botões */
+        .btn {
+            padding: 15px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #666;
+        }
+
+        .download-btn {
+            width: 80%;
+            margin-top: 10px;
+            display: none;
+        }
+
+        form .btn {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Spinner centralizado e maior */
+        .spinner {
+            display: none;
+            position: fixed; /* Fixa na tela */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 12px solid rgba(255, 255, 255, 0.1);
+            border-top: 12px solid #fff;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            z-index: 1000; /* Garante que o spinner fique acima de tudo */
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        footer {
+            height: 400px;
+            background-image: url('/static/surubao.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
+</head>
+<body>
+    <header>Video Editor</header>
+
+    <main>
+        <div class="spinner" id="spinner"></div>
+
+        <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/upload_videos">
+            <label for="video1">Escolha o primeiro vídeo:</label>
+            <input type="file" id="video1" name="video1" accept="video/mp4" required>
+
+            <label for="video2">Escolha o segundo vídeo:</label>
+            <input type="file" id="video2" name="video2" accept="video/mp4" required>
+
+            <input type="submit" value="Enviar Vídeos" class="btn">
+
+            <button id="downloadButton" class="btn download-btn">Baixar Vídeo</button>
+        </form>
+    </main>
+
+    <footer></footer>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const spinner = document.getElementById('spinner');
+        const downloadButton = document.getElementById('downloadButton');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/upload_videos', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const filename = result.filename;
+
+                    downloadButton.onclick = () => {
+                        window.open(`/videos/${filename}`, '_blank');
+                    };
+                    downloadButton.style.display = 'block';
+                    alert('Vídeos enviados com sucesso! Você pode baixá-lo agora.');
+                } else {
+                    alert('Erro ao enviar os vídeos.');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+
+            } finally {
+                spinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
