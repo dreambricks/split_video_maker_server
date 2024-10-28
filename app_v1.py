@@ -13,7 +13,7 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # Limite de 500MB por uplo
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index_v1.html')
 
 @app.route('/upload_videos', methods=['POST'])
 def upload_videos():
