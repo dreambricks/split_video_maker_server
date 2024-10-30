@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Vídeos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        /* Spinner Original */
+        .spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 12px solid rgba(255, 255, 255, 0.1);
+            border-top: 12px solid #fff;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            z-index: 1000;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white font-sans h-screen flex flex-col">
+
+    <header class="bg-gray-800 text-center py-5 text-2xl">
+        Video Editor
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center gap-6 p-6 relative">
+        <div class="spinner" id="spinner"></div>
+
+        <form id="uploadForm" enctype="multipart/form-data" method="POST" class="w-full max-w-md flex flex-col gap-4">
+            <label for="video1" class="text-lg">Escolha os vídeos dos creators:</label>
+            <input type="file" id="video1" name="video1" accept="video/mp4" multiple required
+                class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+            <label for="video2" class="text-lg">Escolha o vídeo de sponsor:</label>
+            <input type="file" id="video2" name="video2" accept="video/mp4" required
+                class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+            <input type="submit" value="Enviar Vídeos"
+                class="btn bg-gray-700 hover:bg-gray-600 text-white py-4 rounded text-lg cursor-pointer">
+        </form>
+
+        <button id="downloadAllButton"
+            class="btn hidden bg-gray-700 hover:bg-gray-600 text-white py-4 rounded text-lg w-full max-w-md">
+            Baixar Todos os Vídeos
+        </button>
+    </main>
+
+    <footer class="h-96 bg-cover bg-center" style="background-image: url('/static/surubao.jpg');"></footer>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const spinner = document.getElementById('spinner');
+        const inputsAndButtons = document.querySelectorAll('input, button');
+
+        function disableElements() {
+            inputsAndButtons.forEach(el => el.disabled = true);
+        }
+
+        function enableElements() {
+            inputsAndButtons.forEach(el => el.disabled = false);
+        }
+
+        function downloadFile(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const video1Files = document.getElementById('video1').files;
+            const video2File = document.getElementById('video2').files[0];
+
+            if (video1Files.length === 0 || !video2File) {
+                alert('Por favor, selecione os vídeos corretamente.');
+                return;
+            }
+
+            spinner.style.display = 'block';
+            disableElements();
+
+            const promises = Array.from(video1Files).map(video1File => {
+                const formData = new FormData();
+                formData.append('video1', video1File);
+                formData.append('video2', video2File);
+
+                return fetch('/upload_videos', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.video_url) {
+                            downloadFile(data.video_url);
+                        } else {
+                            console.error('Erro na resposta:', data);
+                            alert('Erro ao processar o vídeo.');
+                        }
+                    });
+            });
+
+            try {
+                await Promise.all(promises);
+                alert('Todos os vídeos foram processados e estão sendo baixados!');
+                location.reload();
+                await fetch('/finalize_uploads', { method: 'POST' });
+            } catch (error) {
+                if (error.status === 304) {
+                    console.log('Recurso não modificado (304), ignorando erro.');
+                } else {
+                    console.error('Erro:', error);
+                    alert('Erro ao processar os vídeos.');
+                }
+                location.reload();
+            } finally {
+                spinner.style.display = 'none';
+                enableElements();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

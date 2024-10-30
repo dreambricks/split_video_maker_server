@@ -20,7 +20,7 @@ processed_videos = []
 
 @app.route('/')
 def index():
-    return render_template('index_v2.html')
+    return render_template('index.html')
 
 @app.route('/upload_videos', methods=['POST'])
 def upload_videos():
