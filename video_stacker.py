@@ -1,7 +1,14 @@
+import os
 import cv2
+import subprocess
 from resize_video import resize_frame
 
-def stack_videos_vertically_with_loop(video1_path, video2_path, output_path, output_width=1080, output_height=1920):
+def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path, output_width=1080, output_height=1920):
+
+    video1_path_no_ext, t_ext = os.path.splitext(video1_path)
+    temp_audio_path = video1_path_no_ext + "_temp_audio.aac"
+    temp_video_path = video1_path_no_ext + "_temp_video.mp4"
+
     # Open the video files
     cap1 = cv2.VideoCapture(video1_path)
     cap2 = cv2.VideoCapture(video2_path)
@@ -29,7 +36,7 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_path, out
     #output_height = height1 + height2
     output_size = (output_width, output_height)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_path, fourcc, fps, output_size)
+    out = cv2.VideoWriter(temp_video_path, fourcc, fps, output_size)
 
     # Read and stack frames
     while True:
@@ -61,9 +68,23 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_path, out
     cap1.release()
     cap2.release()
     out.release()
-    print("Video stacking with looping complete. Output saved to:", output_path)
+
+    # extract audio from the first video using FFmpeg
+    subprocess.run(['ffmpeg', '-i', video1_path, '-q:a', '0', '-map', 'a', temp_audio_path], check=True)
+
+    # combine the output video with the extracted audio
+    subprocess.run(
+        ['ffmpeg', '-i', temp_video_path, '-i', temp_audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0',
+         '-map', '1:a:0', output_video_path], check=True)
+
+    # clean up
+    os.remove(temp_audio_path)
+    os.remove(temp_video_path)
+
+    print("Video stacking with looping complete. Output saved to:", output_video_path)
 
 
 if __name__ == "__main__":
     # Example usage
-    stack_videos_vertically_with_loop(r'data\bee_orig.mp4', r'data\particles_orig.mp4', r'data\out02.mp4')
+    stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out02.mp4')
+    # stack_videos_vertically_with_loop(r'examples\IMG_0944.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0944_IMG_3102.mp4')
