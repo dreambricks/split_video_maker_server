@@ -186,10 +186,16 @@
         try {
             await Promise.all(promises);
             alert('Todos os vídeos foram processados e estão sendo baixados!');
+            location.reload();
             await fetch('/finalize_uploads', { method: 'POST' });
         } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao processar os vídeos.');
+            if (error.status === 304) {
+                console.log('Recurso não modificado (304), ignorando erro.');
+            } else {
+                console.error('Erro:', error);
+                alert('Erro ao processar os vídeos.');
+            }
+            location.reload();
         } finally {
             spinner.style.display = 'none';
             enableElements();
