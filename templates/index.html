@@ -46,11 +46,11 @@
 
         <form id="uploadForm" enctype="multipart/form-data" method="POST" class="w-full max-w-md flex flex-col gap-4">
             <label for="video1" class="text-lg">Escolha os vídeos dos creators:</label>
-            <input type="file" id="video1" name="video1" accept="video/mp4" multiple required
+            <input type="file" id="video1" name="video1" accept=".mp4, .mkv, .mov" multiple required
                 class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
 
             <label for="video2" class="text-lg">Escolha o vídeo de sponsor:</label>
-            <input type="file" id="video2" name="video2" accept="video/mp4" required
+            <input type="file" id="video2" name="video2" accept=".mp4, .mkv, .mov" required
                 class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
 
             <input type="submit" value="Enviar Vídeos"
