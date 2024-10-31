@@ -69,22 +69,39 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     cap2.release()
     out.release()
 
-    # extract audio from the first video using FFmpeg
-    subprocess.run(['ffmpeg', '-i', video1_path, '-q:a', '0', '-map', 'a', temp_audio_path], check=True)
+    print('Finished merging files')
+    try:
+        print('Creating audio file')
+        # extract audio from the first video using FFmpeg
+        subprocess.run(['ffmpeg', '-i', video1_path, '-q:a', '0', '-map', 'a', temp_audio_path], check=True)
+    except:
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
+        print('Error when creating audio file')
 
-    # combine the output video with the extracted audio
-    subprocess.run(
-        ['ffmpeg', '-i', temp_video_path, '-i', temp_audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0',
-         '-map', '1:a:0', output_video_path], check=True)
+    print('Final step')
+    if os.path.exists(temp_audio_path):
+        print('Merging audio into final video')
+        # combine the output video with the extracted audio
+        subprocess.run(
+            ['ffmpeg', '-i', temp_video_path, '-i', temp_audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0',
+             '-map', '1:a:0', output_video_path], check=True)
 
-    # clean up
-    os.remove(temp_audio_path)
-    os.remove(temp_video_path)
+        # clean up
+        os.remove(temp_audio_path)
+        os.remove(temp_video_path)
+    else:
+        print('No audio file')
+        os.rename(temp_video_path, output_video_path)
 
     print("Video stacking with looping complete. Output saved to:", output_video_path)
 
 
 if __name__ == "__main__":
     # Example usage
-    stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out02.mp4')
+    stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out03.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_0944.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0944_IMG_3102.mp4')
+    # stack_videos_vertically_with_loop(r'examples\IMG_09702.mov', r'examples\IMG_3102.MOV', r'examples\IMG_09702_IMG_3102.mp4')
+    # stack_videos_vertically_with_loop(r'examples\IMG_0970.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0970_IMG_3102.mp4')
+    # stack_videos_vertically_with_loop(r'examples\IMG_0976.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0976_IMG_3102.mp4')
+    # stack_videos_vertically_with_loop(r'examples\IMG_0988.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0988_IMG_3102.mp4')
