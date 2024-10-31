@@ -2,8 +2,19 @@ import os
 import cv2
 import subprocess
 from resize_video import resize_frame
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+
 
 def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path, output_width=1080, output_height=1920):
+    start_time = time.time()
+    logger.info(f"Starting the processing of videos '{video1_path}' and '{video2_path}'")
+
+    if os.path.exists(output_video_path):
+        logger.warning(f"Output file '{output_video_path}' already exists! Deleting it.")
+        os.remove(output_video_path)
 
     video1_path_no_ext, t_ext = os.path.splitext(video1_path)
     temp_audio_path = video1_path_no_ext + "_temp_audio.aac"
@@ -69,19 +80,23 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     cap2.release()
     out.release()
 
-    print('Finished merging files')
+    merge_video_time = time.time()
+
+    logger.debug('Finished merging files')
     try:
-        print('Creating audio file')
+        logger.debug('Creating audio file')
         # extract audio from the first video using FFmpeg
         subprocess.run(['ffmpeg', '-i', video1_path, '-q:a', '0', '-map', 'a', temp_audio_path], check=True)
     except:
         if os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
-        print('Error when creating audio file')
+        logger.warning('Error when creating audio file')
 
-    print('Final step')
+    audio_time = time.time()
+
+    logger.debug('Final step')
     if os.path.exists(temp_audio_path):
-        print('Merging audio into final video')
+        logger.debug('Merging audio into final video')
         # combine the output video with the extracted audio
         subprocess.run(
             ['ffmpeg', '-i', temp_video_path, '-i', temp_audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0',
@@ -91,16 +106,26 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
         os.remove(temp_audio_path)
         os.remove(temp_video_path)
     else:
-        print('No audio file')
+        logger.debug('No audio file')
         os.rename(temp_video_path, output_video_path)
 
-    print("Video stacking with looping complete. Output saved to:", output_video_path)
+    end_time = time.time()
 
+    logger.info(f"Processing finished.")
+    logger.info(f"  Merge Time:         {merge_video_time - start_time:.4f} s")
+    logger.info(f"  Audio Removal Time: {audio_time - merge_video_time:.4f} s")
+    logger.info(f"  Audio Merge Time:   {end_time - audio_time:.4f} s")
+    logger.info(f"  Total Time:         {end_time - start_time:.4f} s")
+
+    logger.info(f"Video stacking with looping complete. Output saved to: {output_video_path}")
 
 if __name__ == "__main__":
-    # Example usage
-    stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out03.mp4')
-    # stack_videos_vertically_with_loop(r'examples\IMG_0944.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0944_IMG_3102.mp4')
+    from logging_config import setup_logging
+
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    # stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out03.mp4')
+    stack_videos_vertically_with_loop(r'examples\IMG_0944.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0944_IMG_3102.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_09702.mov', r'examples\IMG_3102.MOV', r'examples\IMG_09702_IMG_3102.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_0970.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0970_IMG_3102.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_0976.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0976_IMG_3102.mp4')

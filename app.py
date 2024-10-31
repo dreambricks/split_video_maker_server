@@ -4,12 +4,19 @@ import zipfile
 import time
 from flask import Flask, request, send_file, jsonify, render_template, abort
 from werkzeug.utils import secure_filename
+from logging_config import setup_logging
+import logging
 from video_stacker import stack_videos_vertically_with_loop
 import traceback
+
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Set up logging configuration
+setup_logging()
+logger = logging.getLogger("SplitVideoMaker")
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Limite de 10GB por upload
@@ -48,8 +55,8 @@ def upload_videos():
         stack_videos_vertically_with_loop(video1_path, video2_path, output_path)
         processed_videos.append(output_filename)
     except Exception as e:
-        print(f"Erro ao processar os vídeos: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f"Erro ao processar os vídeos: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'error': f'Erro ao processar os vídeos: {str(e)}'}), 500
 
     # Retorna a URL direta para o vídeo processado
@@ -65,8 +72,8 @@ def finalize_uploads():
         source_files.clear()  # Limpa a lista após remover os arquivos
         return jsonify({'message': 'Arquivos source removidos com sucesso.'}), 200
     except Exception as e:
-        print(f"Erro ao remover arquivos: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f"Erro ao remover arquivos: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'error': f'Erro ao remover arquivos: {str(e)}'}), 500
 
 @app.route('/download_zip')
@@ -84,8 +91,8 @@ def download_zip():
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 zipf.write(file_path, filename)
     except Exception as e:
-        print(f"Erro ao criar o arquivo ZIP: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f"Erro ao criar o arquivo ZIP: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'error': f'Erro ao criar o arquivo ZIP: {str(e)}'}), 500
 
     return send_file(zip_path, as_attachment=True)
