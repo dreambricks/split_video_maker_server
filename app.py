@@ -18,9 +18,13 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Limite de 10GB por
 source_files = []
 processed_videos = []
 
+@app.route('/alive')
+def alive():
+    return 'alive'
+
 @app.route('/')
 def index():
-    return render_template('index_v2.html')
+    return render_template('index.html')
 
 @app.route('/upload_videos', methods=['POST'])
 def upload_videos():
@@ -95,4 +99,6 @@ def serve_video(filename):
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5050)
+    context = ('static/fullchain.pem', 'static/privkey.pem')
+    app.run(host='0.0.0.0', ssl_context=context)
+
