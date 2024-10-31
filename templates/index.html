@@ -129,7 +129,7 @@
                 const tempoFinal = Date.now();
                 const tempoDecorrido = ((tempoFinal - tempoInicial) / 1000).toFixed(2); // em segundos
                 console.log(`Todos os vídeos foram processados e estão sendo baixados!\nTempo total: ${tempoDecorrido} segundos`);
-                alert(`Todos os vídeos foram processados e estão sendo baixados!\nTempo total: ${tempoDecorrido} segundos`);
+                alert('Todos os vídeos foram processados e estão sendo baixados!');
 
                 location.reload();
                 await fetch('/finalize_uploads', { method: 'POST' });
