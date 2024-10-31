@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     setup_logging()
     logger = logging.getLogger(__name__)
-    # stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out03.mp4')
+    stack_videos_vertically_with_loop(r'examples\bee_orig.mp4', r'examples\particles_orig.mp4', r'examples\out02.mp4')
     stack_videos_vertically_with_loop(r'examples\IMG_0944.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0944_IMG_3102.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_09702.mov', r'examples\IMG_3102.MOV', r'examples\IMG_09702_IMG_3102.mp4')
     # stack_videos_vertically_with_loop(r'examples\IMG_0970.mov', r'examples\IMG_3102.MOV', r'examples\IMG_0970_IMG_3102.mp4')
