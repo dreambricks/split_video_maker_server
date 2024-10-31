@@ -18,6 +18,10 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Limite de 10GB por
 source_files = []
 processed_videos = []
 
+@app.route('/alive')
+def alive():
+    return 'alive'
+
 @app.route('/')
 def index():
     return render_template('index.html')
