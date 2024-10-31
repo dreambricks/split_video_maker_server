@@ -99,4 +99,6 @@ def serve_video(filename):
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5050)
+    context = ('static/fullchain.pem', 'static/privkey.pem')
+    app.run(host='0.0.0.0', ssl_context=context)
+
