@@ -8,6 +8,7 @@ from logging_config import setup_logging
 import logging
 from video_stacker import stack_videos_vertically_with_loop
 import traceback
+from utils import generate_datetime_filename
 
 
 app = Flask(__name__)
@@ -48,7 +49,9 @@ def upload_videos():
 
     source_files.extend([video1_path, video2_path])
 
-    output_filename = f"out_{uuid.uuid4()}.mp4"
+    video1_basename, _ = os.path.splitext(os.path.basename(video1_path))
+    video2_basename, _ = os.path.splitext(os.path.basename(video2_path))
+    output_filename = generate_datetime_filename(f"out_{video1_basename}_{video2_basename}", "mp4")
     output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
 
     try:
