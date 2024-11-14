@@ -1,0 +1,82 @@
+/* Main container for each file upload box */
+.progress-wrapper {
+  width: 80%;
+  max-width: 600px; /* Optional: to prevent excessively wide boxes */
+  margin: 20px auto; /* Center the box and add some spacing */
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* File name text */
+.progress-wrapper p {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Upload progress bar */
+.progress-bar {
+  height: 20px;
+  width: 0;
+  background-color: #4caf50;
+  transition: width 0.4s ease;
+  border-radius: 4px;
+}
+
+/* Processing progress bar */
+.progress-bar.processing {
+  background-color: #2196f3;
+  margin-top: 5px; /* Add spacing between upload and processing bars */
+}
+
+/* To animate the completion smoothly */
+.progress-bar.complete {
+  background-color: #4caf50;
+  width: 100%;
+}
+
+.summary-box {
+  position: relative;
+  width: 80%;
+  max-width: 600px; /* Optional: to prevent excessively wide boxes */
+  margin: 20px auto; /* Center the box and add some spacing */
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f1f1f1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-box p {
+  margin: 5px 0;
+}
+
+.summary-box a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.summary-box a:hover {
+  text-decoration: underline;
+}
+
+/* Close button styling */
+.summary-box .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #ff4d4d;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.summary-box .close-btn:hover {
+  color: #ff1a1a;
+}

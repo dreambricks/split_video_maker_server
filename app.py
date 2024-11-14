@@ -9,30 +9,108 @@ import logging
 from video_stacker import stack_videos_vertically_with_loop
 import traceback
 from utils import generate_datetime_filename
+import threading
 
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'data'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = 'uploads'
+PROCESSING_FOLDER = 'processing'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(PROCESSING_FOLDER):
+    os.makedirs(PROCESSING_FOLDER)
 
 # Set up logging configuration
 setup_logging()
 logger = logging.getLogger("SplitVideoMaker")
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['PROCESSING_FOLDER'] = PROCESSING_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Limite de 10GB por upload
 
 # Listas para armazenar os arquivos "source" e vídeos processados
 source_files = []
 processed_videos = []
 
+
+def dummy_process_file(file_path, file2_path, status_path):
+    """Simulate file processing with progress updates based on file size."""
+    file_size = os.path.getsize(file_path)  # Get file size in bytes
+    file2_size = os.path.getsize(file2_path)  # Get file size in bytes
+    processing_time = max(file_size, file2_size) / (10 * 1024 * 1024)  # 1 second per 10 MB
+    steps = 20  # Divide processing into 20 steps
+    for i in range(steps + 1):
+        with open(status_path, 'w') as f:
+            f.write(str(i * 100 // steps))  # Write progress as percentage (step% increments)
+        time.sleep(processing_time / steps)
+
+
 @app.route('/alive')
 def alive():
     return 'alive'
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+# Endpoint to handle secondary file upload
+@app.route('/upload-secondary', methods=['POST'])
+def upload_secondary():
+    secondary_file = request.files['file']
+    secondary_file_path = os.path.join(UPLOAD_FOLDER, secondary_file.filename)
+    secondary_file.save(secondary_file_path)  # Save the secondary file
+
+    return jsonify({"file_path": secondary_file_path})
+
+
+# Endpoint to handle primary file uploads, with a secondary file path
+@app.route('/upload', methods=['POST'])
+def upload_primary():
+    primary_file = request.files['file']
+    secondary_file_path = request.form.get('secondary_file_path')  # Get path of secondary file
+
+    # Save primary file
+    primary_file_path = os.path.join(UPLOAD_FOLDER, primary_file.filename)
+    primary_file.save(primary_file_path)
+
+    # Create a status file for tracking processing progress
+    status_path = os.path.join(app.config['PROCESSING_FOLDER'], primary_file.filename + ".status")
+
+    video1_basename, _ = os.path.splitext(os.path.basename(primary_file_path))
+    video2_basename, _ = os.path.splitext(os.path.basename(secondary_file_path))
+    output_filename = generate_datetime_filename(f"out_{video1_basename}_{video2_basename}", "mp4")
+    output_file_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+
+    # Simulate processing both files
+    #process_files(primary_file_path, primary_file_size, secondary_file_path, secondary_file_size)
+    #threading.Thread(target=dummy_process_file, args=(primary_file_path, secondary_file_path, status_path)).start()
+    threading.Thread(target=stack_videos_vertically_with_loop,
+                     args=(primary_file_path, secondary_file_path, output_file_path, status_path)).start()
+
+    return jsonify({"file": primary_file.filename})
+
+
+@app.route('/progress/<filename>')
+def progress(filename):
+    """Check processing progress of a specific file."""
+    status_path = os.path.join(app.config['PROCESSING_FOLDER'], filename + ".status")
+    if os.path.exists(status_path):
+        with open(status_path, 'r') as f:
+            progress = f.read()
+        return jsonify({"processing_progress": progress}), 200
+    #return jsonify({"processing_progress": "100"}), 200  # Return 100 if processing is complete
+
+    # Return a link to the processed primary file
+    #processed_file_name = os.path.basename(processed_file_path)
+    return jsonify({
+        "processing_progress": "100"#,
+        #"file": primary_file.filename,
+        #"secondary_file": os.path.basename(secondary_file_path),
+        #"download_link": url_for('download_file', filename=processed_file_name)
+    })
+
 
 @app.route('/upload_videos', methods=['POST'])
 def upload_videos():
@@ -65,6 +143,7 @@ def upload_videos():
     # Retorna a URL direta para o vídeo processado
     return jsonify({'video_url': f'/videos/{output_filename}'}), 200
 
+
 @app.route('/finalize_uploads', methods=['POST'])
 def finalize_uploads():
     """Rota para excluir todos os arquivos 'source' após o upload e processamento."""
@@ -78,6 +157,7 @@ def finalize_uploads():
         logger.error(f"Erro ao remover arquivos: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({'error': f'Erro ao remover arquivos: {str(e)}'}), 500
+
 
 @app.route('/download_zip')
 def download_zip():
@@ -100,6 +180,7 @@ def download_zip():
 
     return send_file(zip_path, as_attachment=True)
 
+
 @app.route('/videos/<filename>')
 def serve_video(filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -109,6 +190,7 @@ def serve_video(filename):
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
-    context = ('static/fullchain.pem', 'static/privkey.pem')
-    app.run(host='0.0.0.0', ssl_context=context)
+    #context = ('static/fullchain.pem', 'static/privkey.pem')
+    #app.run(host='0.0.0.0', ssl_context=context)
+    app.run()
 

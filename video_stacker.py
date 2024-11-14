@@ -8,7 +8,8 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path, output_width=1080, output_height=1920):
+def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path, status_path=None,
+                                      output_width=1080, output_height=1920):
     start_time = time.time()
     logger.info(f"Starting the processing of videos '{video1_path}' and '{video2_path}'")
 
@@ -29,12 +30,14 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     height1 = int(cap1.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
     change1 = width1 != output_width or height1 != output_height / 2
+    frame_count1 = int(cap1.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Get properties of the second video
     width2 = int(cap2.get(cv2.CAP_PROP_FRAME_WIDTH))
     height2 = int(cap2.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps2 = cap2.get(cv2.CAP_PROP_FPS)
     change2 = width2 != output_width or height2 != output_height / 2
+    #frame_count2 = int(cap1.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Use the minimum fps between the two videos to prevent errors
     fps = min(fps1, fps2)
@@ -49,6 +52,9 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(temp_video_path, fourcc, fps, output_size)
 
+    out_frame = 0
+    prev_progress = 0
+    current_progress = 0
     # Read and stack frames
     while True:
         ret1, frame1 = cap1.read()
@@ -74,6 +80,19 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
 
         # Write the stacked frame to the output video
         out.write(stacked_frame)
+
+        if status_path is not None:
+            out_frame += 1
+            current_progress = out_frame * 100 // frame_count1
+            if current_progress != prev_progress:
+                with open(status_path, 'w') as f:
+                    f.write(str(current_progress))  # Write progress as percentage (step% increments)
+                prev_progress = current_progress
+
+    if status_path is not None:
+        current_progress = 100
+        with open(status_path, 'w') as f:
+            f.write(str(current_progress))  # Write progress as percentage (step% increments)
 
     # Release everything
     cap1.release()
