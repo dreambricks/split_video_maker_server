@@ -1,3 +1,9 @@
+function getFilename(filePath) {
+    // Split by forward or backward slashes and return the last part
+    const parts = filePath.split(/[/\\]/);
+    return parts[parts.length - 1];
+}
+
 document.getElementById('uploadButton').addEventListener('click', () => {
   const primaryFiles = document.getElementById('video1').files;
   const secondaryFile = document.getElementById('video2').files[0];
@@ -99,7 +105,8 @@ function uploadPrimaryFile(file, index, secondaryFilePath, jobCode) {
       // document.getElementById(`statusText${index}`).innerText = `Upload complete for ${file.name}.`;
 
       const response = JSON.parse(xhr.responseText);
-      document.getElementById(`statusText${index}`).innerText = `Processing ${file.name} and ${secondaryFilePath}...`;
+      secondaryFilename = getFilename(secondaryFilePath);
+      document.getElementById(`statusText${index}`).innerText = `Processing ${file.name} and ${secondaryFilename}...`;
       checkProcessingProgress(response.file, index, jobCode, response);
     } else {
       document.getElementById(`statusText${index}`).innerText = `Upload failed for ${file.name}.`;
