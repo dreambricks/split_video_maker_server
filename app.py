@@ -34,18 +34,6 @@ source_files = []
 processed_videos = []
 
 
-def dummy_process_file(file_path, file2_path, status_path):
-    """Simulate file processing with progress updates based on file size."""
-    file_size = os.path.getsize(file_path)  # Get file size in bytes
-    file2_size = os.path.getsize(file2_path)  # Get file size in bytes
-    processing_time = max(file_size, file2_size) / (10 * 1024 * 1024)  # 1 second per 10 MB
-    steps = 20  # Divide processing into 20 steps
-    for i in range(steps + 1):
-        with open(status_path, 'w') as f:
-            f.write(str(i * 100 // steps))  # Write progress as percentage (step% increments)
-        time.sleep(processing_time / steps)
-
-
 @app.route('/alive')
 def alive():
     return 'alive'

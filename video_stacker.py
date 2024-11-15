@@ -96,7 +96,7 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
                 "video1": video1_filename,
                 "video2": video2_filename,
                 "out_video": output_link
-            }))  # Write progress as percentage (step% increments)
+            }))  # Write the details of the job
 
     # write the final progress here to make sure the json file with the details about the job exist
     if status_path is not None:
