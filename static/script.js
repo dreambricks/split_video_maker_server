@@ -14,25 +14,34 @@ document.getElementById('uploadButton').addEventListener('click', () => {
     return;
   }
 
-  // Upload the secondary file first and get its path
-  const secondaryIndex = 0;
-  createProgressBars(secondaryFile, secondaryIndex, false);
-  uploadSecondaryFile(secondaryFile, secondaryIndex).then(secondaryFilePath => {
-    // After the secondary file is uploaded, upload the primary files with the secondary file path
-    for (let i = 0; i < primaryFiles.length; i++) {
-      const file = primaryFiles[i];
-      const primaryIndex = i + 1; // Ensure unique index for primary files
-      createProgressBars(file, primaryIndex, true);
-      uploadPrimaryFile(file, primaryIndex, secondaryFilePath); // Pass secondary file path
-    }
+  fetch(`/get-job-code`)
+  .then(response => response.json())
+  .then(data => {
+    jobCode = data.job_code;
+
+    // Upload the secondary file first and get its path
+    const secondaryIndex = 0;
+    createProgressBars(secondaryFile, secondaryIndex, false);
+    uploadSecondaryFile(secondaryFile, secondaryIndex, jobCode).then(response => {
+      secondaryFilePath = response.file_path;
+
+      // After the secondary file is uploaded, upload the primary files with the secondary file path
+      for (let i = 0; i < primaryFiles.length; i++) {
+        const file = primaryFiles[i];
+        const primaryIndex = i + 1; // Ensure unique index for primary files
+        createProgressBars(file, primaryIndex, true);
+        uploadPrimaryFile(file, primaryIndex, secondaryFilePath, jobCode); // Pass secondary file path
+      }
+    });
   });
 });
 
 // Function to upload the secondary file and return its stored path
-function uploadSecondaryFile(file, index) {
+function uploadSecondaryFile(file, index, jobCode) {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('job_code', jobCode);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/upload-secondary', true);
@@ -56,7 +65,7 @@ function uploadSecondaryFile(file, index) {
           wrapper.remove();
         }, 10000);
 
-        resolve(response.file_path); // Resolve with the file path returned by the server
+        resolve(response); // Resolve with the file path & job code returned by the server
       } else {
         document.getElementById(`statusText${index}`).innerText = `Upload failed for ${file.name}.`;
         reject(new Error("Secondary file upload failed"));
@@ -68,10 +77,11 @@ function uploadSecondaryFile(file, index) {
 }
 
 // Function to upload primary files, with the secondary file path
-function uploadPrimaryFile(file, index, secondaryFilePath) {
+function uploadPrimaryFile(file, index, secondaryFilePath, jobCode) {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('secondary_file_path', secondaryFilePath); // Pass the path instead of the file
+  formData.append('job_code', jobCode);
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/upload', true);
@@ -90,7 +100,7 @@ function uploadPrimaryFile(file, index, secondaryFilePath) {
 
       const response = JSON.parse(xhr.responseText);
       document.getElementById(`statusText${index}`).innerText = `Processing ${file.name} and ${secondaryFilePath}...`;
-      checkProcessingProgress(response.file, index, response);
+      checkProcessingProgress(response.file, index, jobCode, response);
     } else {
       document.getElementById(`statusText${index}`).innerText = `Upload failed for ${file.name}.`;
     }
@@ -98,7 +108,6 @@ function uploadPrimaryFile(file, index, secondaryFilePath) {
 
   xhr.send(formData);
 }
-
 
 function createProgressBars(file, index, requiresProcessing) {
   const wrapper = document.createElement('div');
@@ -166,10 +175,9 @@ function uploadFile(file, index, requiresProcessing) {
   xhr.send(formData);
 }
 
-
-function checkProcessingProgress(filename, index, response) {
+function checkProcessingProgress(filename, index, jobCode, response) {
   const intervalId = setInterval(() => {
-    fetch(`/progress/${filename}`)
+    fetch(`/progress/${jobCode}/${filename}`)
       .then(response => response.json())
       .then(data => {
         const progress = data.processing_progress;
@@ -179,7 +187,7 @@ function checkProcessingProgress(filename, index, response) {
           clearInterval(intervalId);
           document.getElementById(`statusText${index}`).innerText = `${filename} processing complete!`;
 
-          fetch(`/details/${filename}`)
+          fetch(`/details/${jobCode}/${filename}`)
             .then(response2 => response2.json())
             .then(data2 => {
 

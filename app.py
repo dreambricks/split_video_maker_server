@@ -9,7 +9,7 @@ from logging_config import setup_logging
 import logging
 from video_stacker import stack_videos_vertically_with_loop
 import traceback
-from utils import generate_datetime_filename
+from utils import generate_datetime_filename, generate_random_string
 import threading
 
 
@@ -44,14 +44,25 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/get-job-code')
+def get_job_code():
+    job_code = generate_random_string(10)
+    job_code_dir = os.path.join(UPLOAD_FOLDER, job_code)
+    os.makedirs(job_code_dir)
+    job_code_proc_dir = os.path.join(app.config['PROCESSING_FOLDER'], job_code)
+    os.makedirs(job_code_proc_dir)
+    return jsonify({"job_code": job_code})
+
+
 # Endpoint to handle secondary file upload
 @app.route('/upload-secondary', methods=['POST'])
 def upload_secondary():
     secondary_file = request.files['file']
-    secondary_file_path = os.path.join(UPLOAD_FOLDER, secondary_file.filename)
+    job_code = request.form.get('job_code')
+    secondary_file_path = os.path.join(UPLOAD_FOLDER, job_code, secondary_file.filename)
     secondary_file.save(secondary_file_path)  # Save the secondary file
 
-    return jsonify({"file_path": secondary_file_path})
+    return jsonify({"file_path": secondary_file_path, "job_code": job_code})
 
 
 # Endpoint to handle primary file uploads, with a secondary file path
@@ -59,22 +70,24 @@ def upload_secondary():
 def upload_primary():
     primary_file = request.files['file']
     secondary_file_path = request.form.get('secondary_file_path')  # Get path of secondary file
+    job_code = request.form.get('job_code')
 
     # Save primary file
-    primary_file_path = os.path.join(UPLOAD_FOLDER, primary_file.filename)
+    primary_file_path = os.path.join(UPLOAD_FOLDER, job_code, primary_file.filename)
     primary_file.save(primary_file_path)
 
     # Create a status file for tracking processing progress
-    status_path = os.path.join(app.config['PROCESSING_FOLDER'], primary_file.filename + ".status")
+    job_code_proc_dir = os.path.join(app.config['PROCESSING_FOLDER'], job_code)
+    status_path = os.path.join(job_code_proc_dir, primary_file.filename + ".status")
 
     # Create a job file with details about the work
-    job_path = os.path.join(app.config['PROCESSING_FOLDER'], "job_" + primary_file.filename + ".json")
+    job_path = os.path.join(job_code_proc_dir, "job_" + primary_file.filename + ".json")
 
     video1_basename, _ = os.path.splitext(os.path.basename(primary_file_path))
     video2_basename, _ = os.path.splitext(os.path.basename(secondary_file_path))
     output_filename = generate_datetime_filename(f"out_{video1_basename}_{video2_basename}", "mp4")
-    output_file_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
-    output_link = "videos/" + output_filename
+    output_file_path = os.path.join(app.config['UPLOAD_FOLDER'], job_code, output_filename)
+    output_link = f"videos/{job_code}/{output_filename}"
 
     # Simulate processing both files
     #process_files(primary_file_path, primary_file_size, secondary_file_path, secondary_file_size)
@@ -86,20 +99,20 @@ def upload_primary():
     return jsonify({"file": primary_file.filename})
 
 
-@app.route('/progress/<filename>')
-def progress(filename):
+@app.route('/progress/<job_code>/<filename>')
+def progress(job_code, filename):
     """Check processing progress of a specific file."""
-    status_path = os.path.join(app.config['PROCESSING_FOLDER'], filename + ".status")
+    status_path = os.path.join(app.config['PROCESSING_FOLDER'], job_code, filename + ".status")
     if os.path.exists(status_path):
         with open(status_path, 'r') as f:
             progress = f.read()
         return jsonify({"processing_progress": progress}), 200
     return jsonify({"processing_progress": "100"}), 200  # Return 100 if processing is complete
 
-@app.route('/details/<filename>')
-def details(filename):
+@app.route('/details/<job_code>/<filename>')
+def details(job_code, filename):
     """Check processing progress of a specific file."""
-    details_path = os.path.join(app.config['PROCESSING_FOLDER'], "job_" + filename + ".json")
+    details_path = os.path.join(app.config['PROCESSING_FOLDER'], job_code, "job_" + filename + ".json")
     if os.path.exists(details_path):
         with open(details_path, 'r') as f:
             job_details = json.load(f)
@@ -183,9 +196,9 @@ def download_zip():
     return send_file(zip_path, as_attachment=True)
 
 
-@app.route('/videos/<filename>')
-def serve_video(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+@app.route('/videos/<job_code>/<filename>')
+def serve_video(job_code, filename):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], job_code, filename)
     if not os.path.isfile(file_path):
         abort(404)
 
