@@ -179,8 +179,13 @@ function checkProcessingProgress(filename, index, response) {
           clearInterval(intervalId);
           document.getElementById(`statusText${index}`).innerText = `${filename} processing complete!`;
 
-          // Display a summary box with file details and link after processing
-          displayProcessedFileSummary(response.file, response.secondary_file, response.download_link);
+          fetch(`/details/${filename}`)
+            .then(response2 => response2.json())
+            .then(data2 => {
+
+              // Display a summary box with file details and link after processing
+              displayProcessedFileSummary(data2.video1, data2.video2, data2.out_video);
+          });
 
           // Remove the progress bars and status after 10 seconds
           setTimeout(() => {
@@ -207,20 +212,12 @@ function displayProcessedFileSummary(primaryFileName, secondaryFileName, downloa
   summaryBox.appendChild(closeButton);
 
   const title = document.createElement('p');
-  title.innerHTML = `<strong>Processed Files:</strong>`;
+  title.innerHTML = `<strong>Download the split video:</strong>`;
   summaryBox.appendChild(title);
-
-  const primaryFileText = document.createElement('p');
-  primaryFileText.innerText = `Primary File: ${primaryFileName}`;
-  summaryBox.appendChild(primaryFileText);
-
-  const secondaryFileText = document.createElement('p');
-  secondaryFileText.innerText = `Secondary File: ${secondaryFileName}`;
-  summaryBox.appendChild(secondaryFileText);
 
   const downloadLinkElement = document.createElement('a');
   downloadLinkElement.href = downloadLink;
-  downloadLinkElement.innerText = `Download ${primaryFileName}`;
+  downloadLinkElement.innerText = `${primaryFileName} + ${secondaryFileName}`;
   downloadLinkElement.target = "_blank"; // Open link in a new tab
   summaryBox.appendChild(downloadLinkElement);
 

@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 import zipfile
@@ -78,16 +79,21 @@ def upload_primary():
     # Create a status file for tracking processing progress
     status_path = os.path.join(app.config['PROCESSING_FOLDER'], primary_file.filename + ".status")
 
+    # Create a job file with details about the work
+    job_path = os.path.join(app.config['PROCESSING_FOLDER'], "job_" + primary_file.filename + ".json")
+
     video1_basename, _ = os.path.splitext(os.path.basename(primary_file_path))
     video2_basename, _ = os.path.splitext(os.path.basename(secondary_file_path))
     output_filename = generate_datetime_filename(f"out_{video1_basename}_{video2_basename}", "mp4")
     output_file_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+    output_link = "videos/" + output_filename
 
     # Simulate processing both files
     #process_files(primary_file_path, primary_file_size, secondary_file_path, secondary_file_size)
     #threading.Thread(target=dummy_process_file, args=(primary_file_path, secondary_file_path, status_path)).start()
     threading.Thread(target=stack_videos_vertically_with_loop,
-                     args=(primary_file_path, secondary_file_path, output_file_path, status_path)).start()
+                     args=(primary_file_path, secondary_file_path, output_file_path,
+                           status_path, job_path, output_link)).start()
 
     return jsonify({"file": primary_file.filename})
 
@@ -100,16 +106,24 @@ def progress(filename):
         with open(status_path, 'r') as f:
             progress = f.read()
         return jsonify({"processing_progress": progress}), 200
+    return jsonify({"processing_progress": "100"}), 200  # Return 100 if processing is complete
+
+@app.route('/details/<filename>')
+def details(filename):
+    """Check processing progress of a specific file."""
+    details_path = os.path.join(app.config['PROCESSING_FOLDER'], "job_" + filename + ".json")
+    if os.path.exists(details_path):
+        with open(details_path, 'r') as f:
+            job_details = json.load(f)
+            return jsonify({
+                "video1": job_details['video1'],
+                "video2": job_details['video2'],
+                "out_video": job_details['out_video'],
+            }), 200
     #return jsonify({"processing_progress": "100"}), 200  # Return 100 if processing is complete
 
     # Return a link to the processed primary file
-    #processed_file_name = os.path.basename(processed_file_path)
-    return jsonify({
-        "processing_progress": "100"#,
-        #"file": primary_file.filename,
-        #"secondary_file": os.path.basename(secondary_file_path),
-        #"download_link": url_for('download_file', filename=processed_file_name)
-    })
+    return jsonify({'error': f"details file doesn't exist: {str(details_path)}"}), 500
 
 
 @app.route('/upload_videos', methods=['POST'])

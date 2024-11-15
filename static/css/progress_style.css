@@ -1,6 +1,6 @@
 /* Main container for each file upload box */
 .progress-wrapper {
-  width: 80%;
+  width: 100%;
   max-width: 600px; /* Optional: to prevent excessively wide boxes */
   margin: 20px auto; /* Center the box and add some spacing */
   padding: 15px;
@@ -41,7 +41,7 @@
 
 .summary-box {
   position: relative;
-  width: 80%;
+  width: 100%;
   max-width: 600px; /* Optional: to prevent excessively wide boxes */
   margin: 20px auto; /* Center the box and add some spacing */
   margin-top: 10px;
@@ -53,6 +53,7 @@
 }
 
 .summary-box p {
+  color: #101010;
   margin: 5px 0;
 }
 
