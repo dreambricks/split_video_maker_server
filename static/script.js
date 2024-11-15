@@ -59,11 +59,11 @@ function uploadSecondaryFile(file, index, jobCode) {
         const response = JSON.parse(xhr.responseText);
         document.getElementById(`statusText${index}`).innerText = `Upload complete for ${file.name}.`;
 
-        // Remove the box after 10 seconds
+        // Remove the box after 3 seconds
         setTimeout(() => {
           const wrapper = document.getElementById(`statusText${index}`).parentNode;
           wrapper.remove();
-        }, 10000);
+        }, 3000);
 
         resolve(response); // Resolve with the file path & job code returned by the server
       } else {
@@ -195,11 +195,11 @@ function checkProcessingProgress(filename, index, jobCode, response) {
               displayProcessedFileSummary(data2.video1, data2.video2, data2.out_video);
           });
 
-          // Remove the progress bars and status after 10 seconds
+          // Remove the progress bars and status after 5 seconds
           setTimeout(() => {
             const wrapper = document.getElementById(`statusText${index}`).parentNode;
             wrapper.remove();
-          }, 10000); // 10 seconds delay
+          }, 5000); // 5 seconds delay
         }
       });
   }, 500); // Check every 500 ms
