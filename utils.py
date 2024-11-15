@@ -41,3 +41,10 @@ def generate_random_string(length):
     # Generate a random string
     random_string = ''.join(random.choices(allowed_chars, k=length))
     return random_string
+
+
+def generate_datetime_unique_string():
+    random_string = generate_random_string(5)
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    return f"{current_time}_{random_string}"

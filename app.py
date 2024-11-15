@@ -9,7 +9,7 @@ from logging_config import setup_logging
 import logging
 from video_stacker import stack_videos_vertically_with_loop
 import traceback
-from utils import generate_datetime_filename, generate_random_string
+from utils import generate_datetime_filename, generate_datetime_unique_string
 import threading
 
 
@@ -46,7 +46,7 @@ def index():
 
 @app.route('/get-job-code')
 def get_job_code():
-    job_code = generate_random_string(10)
+    job_code = generate_datetime_unique_string()
     job_code_dir = os.path.join(UPLOAD_FOLDER, job_code)
     os.makedirs(job_code_dir)
     job_code_proc_dir = os.path.join(app.config['PROCESSING_FOLDER'], job_code)
