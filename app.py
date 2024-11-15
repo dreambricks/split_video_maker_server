@@ -33,6 +33,15 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Limite de 10GB por
 source_files = []
 processed_videos = []
 
+# Limit to 3 threads
+semaphore = threading.Semaphore(3)
+
+
+def process_videos(primary_file_path, secondary_file_path, output_file_path, status_path, job_path, output_link):
+    with semaphore:
+        stack_videos_vertically_with_loop(
+            primary_file_path, secondary_file_path, output_file_path,
+            status_path, job_path, output_link)
 
 @app.route('/alive')
 def alive():
@@ -79,6 +88,8 @@ def upload_primary():
     # Create a status file for tracking processing progress
     job_code_proc_dir = os.path.join(app.config['PROCESSING_FOLDER'], job_code)
     status_path = os.path.join(job_code_proc_dir, primary_file.filename + ".status")
+    with open(status_path, 'w') as f:
+        f.write(str(0))
 
     # Create a job file with details about the work
     job_path = os.path.join(job_code_proc_dir, "job_" + primary_file.filename + ".json")
@@ -92,7 +103,7 @@ def upload_primary():
     # Simulate processing both files
     #process_files(primary_file_path, primary_file_size, secondary_file_path, secondary_file_size)
     #threading.Thread(target=dummy_process_file, args=(primary_file_path, secondary_file_path, status_path)).start()
-    threading.Thread(target=stack_videos_vertically_with_loop,
+    threading.Thread(target=process_videos,
                      args=(primary_file_path, secondary_file_path, output_file_path,
                            status_path, job_path, output_link)).start()
 
