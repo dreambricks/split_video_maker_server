@@ -4,17 +4,23 @@ import subprocess
 from resize_video import resize_frame
 import logging
 import time
+import json
 
 logger = logging.getLogger(__name__)
 
 
-def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path, output_width=1080, output_height=1920):
+def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_path,
+                                      status_path=None, job_path=None, output_link=None,
+                                      output_width=1080, output_height=1920):
     start_time = time.time()
     logger.info(f"Starting the processing of videos '{video1_path}' and '{video2_path}'")
 
     if os.path.exists(output_video_path):
         logger.warning(f"Output file '{output_video_path}' already exists! Deleting it.")
         os.remove(output_video_path)
+
+    _, video1_filename = os.path.split(video1_path)
+    _, video2_filename = os.path.split(video2_path)
 
     video1_path_no_ext, t_ext = os.path.splitext(video1_path)
     temp_audio_path = video1_path_no_ext + "_temp_audio.aac"
@@ -29,6 +35,7 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     height1 = int(cap1.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
     change1 = width1 != output_width or height1 != output_height / 2
+    frame_count1 = int(cap1.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Get properties of the second video
     width2 = int(cap2.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -39,16 +46,14 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
     # Use the minimum fps between the two videos to prevent errors
     fps = min(fps1, fps2)
 
-    # Ensure videos have the same width; resize if necessary
-    #if width1 != width2:
-    #    raise ValueError("The videos have different widths. Please resize them to match.")
-
     # Define the codec and create VideoWriter for the output video
     #output_height = height1 + height2
     output_size = (output_width, output_height)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(temp_video_path, fourcc, fps, output_size)
 
+    out_frame = 0
+    prev_progress = 0
     # Read and stack frames
     while True:
         ret1, frame1 = cap1.read()
@@ -74,6 +79,30 @@ def stack_videos_vertically_with_loop(video1_path, video2_path, output_video_pat
 
         # Write the stacked frame to the output video
         out.write(stacked_frame)
+
+        if status_path is not None:
+            out_frame += 1
+            current_progress = out_frame * 100 // frame_count1
+
+            # don't write the final progress here
+            if current_progress != prev_progress and current_progress < 100:
+                with open(status_path, 'w') as f:
+                    f.write(str(current_progress))  # Write progress as percentage (step% increments)
+                prev_progress = current_progress
+
+    if job_path is not None and output_link is not None:
+        with open(job_path, 'w') as f:
+            f.write(json.dumps({
+                "video1": video1_filename,
+                "video2": video2_filename,
+                "out_video": output_link
+            }))  # Write the details of the job
+
+    # write the final progress here to make sure the json file with the details about the job exist
+    if status_path is not None:
+        current_progress = 100
+        with open(status_path, 'w') as f:
+            f.write(str(current_progress))  # Write progress as percentage (step% increments)
 
     # Release everything
     cap1.release()
