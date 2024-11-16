@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload de Vídeos</title>
+    <title>Split Video Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/progress_style.css') }}">
 </head>
@@ -12,23 +12,23 @@
 <body class="bg-black text-white font-sans h-screen flex flex-col">
 
     <header class="bg-gray-800 text-center py-5 text-2xl">
-        Video Editor
+        Split Video Generator
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-center gap-6 p-6 relative">
         <div class="spinner" id="spinner"></div>
 
-        <label for="video1" class="text-lg">Escolha os vídeos dos creators:</label>
+        <label for="video1" class="text-lg">Creators videos:</label>
         <input type="file" id="video1" name="video1" accept=".mp4, .mkv, .mov" multiple required
             class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
 
-        <label for="video2" class="text-lg">Escolha o vídeo de sponsor:</label>
+        <label for="video2" class="text-lg">Sponsor video:</label>
         <input type="file" id="video2" name="video2" accept=".mp4, .mkv, .mov" required
             class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
 
         <button id="uploadButton"
-            class="btn bg-gray-700 hover:bg-gray-600 text-white py-4 rounded text-lg cursor-pointer">
-            Enviar Videos</button>
+            class="btn bg-gray-700 hover:bg-gray-600 text-white px-3 py-4 rounded text-lg cursor-pointer">
+            Generate Split Videos</button>
 
         <div id="dynamicButtonsContainer"></div>
         <div id="processedFilesContainer"></div>
