@@ -82,8 +82,8 @@
   color: #ff1a1a;
 }
 
-#closeAllButton {
-    margin: 10px 0;
+#closeAllButton, #downloadAllButton {
+    margin: 10px 10px;
     padding: 10px 20px;
     background-color: #ff4d4d;
     color: white;
@@ -92,7 +92,7 @@
     cursor: pointer;
 }
 
-#closeAllButton:hover {
+#closeAllButton:hover, #downloadAllButton:hover {
     background-color: #ff1a1a;
 }
 
@@ -101,6 +101,7 @@
     transform: translateY(-10px);
     transition: opacity 0.3s, transform 0.3s;
 }
+
 .summary-box.show {
     opacity: 1;
     transform: translateY(0);

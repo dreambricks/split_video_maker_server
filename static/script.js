@@ -224,7 +224,7 @@ function displayProcessedFileSummary(primaryFileName, secondaryFileName, downloa
     closeButton.innerHTML = '&times;';
     closeButton.onclick = () => {
         summaryBox.remove();
-        updateCloseAllButton(); // Check if the "Close All" button needs to be updated
+        updateActionButtons(); // Check if the action buttons need to be updated
     };
     summaryBox.appendChild(closeButton);
 
@@ -243,19 +243,20 @@ function displayProcessedFileSummary(primaryFileName, secondaryFileName, downloa
     // Add animation
     setTimeout(() => summaryBox.classList.add('show'), 10);
 
-    // Update the "Close All" button
-    updateCloseAllButton();
+    // Update action buttons
+    updateActionButtons();
 }
 
-function updateCloseAllButton() {
+function updateActionButtons() {
     const summaryContainer = document.getElementById('processedFilesContainer');
     const boxes = summaryContainer.getElementsByClassName('summary-box');
     const closeAllButton = document.getElementById('closeAllButton');
+    const downloadAllButton = document.getElementById('downloadAllButton');
+    const buttonsContainer = document.getElementById('dynamicButtonsContainer');
 
     if (boxes.length >= 2) {
         if (!closeAllButton) {
             // Create "Close All" button
-            const buttonsContainer = document.getElementById('dynamicButtonsContainer');
             const button = document.createElement('button');
             button.id = 'closeAllButton';
             button.innerText = 'Close All';
@@ -264,12 +265,34 @@ function updateCloseAllButton() {
                 while (boxes.length > 0) {
                     boxes[0].remove();
                 }
-                updateCloseAllButton(); // Update the button's visibility
+                updateActionButtons(); // Update the buttons' visibility
             };
             buttonsContainer.appendChild(button);
         }
-    } else if (closeAllButton) {
-        // Remove the "Close All" button if fewer than 2 boxes
-        closeAllButton.remove();
+
+        // Create "Download All" button if not present
+        if (!downloadAllButton) {
+            const downloadAll = document.createElement('button');
+            downloadAll.id = 'downloadAllButton';
+            downloadAll.innerText = 'Download All';
+            downloadAll.onclick = () => downloadAllFiles();
+            buttonsContainer.appendChild(downloadAll);
+        }
+    } else {
+        // Remove the buttons if fewer than 2 boxes
+        if (closeAllButton) closeAllButton.remove();
+        if (downloadAllButton) downloadAllButton.remove();
     }
+}
+
+function downloadAllFiles() {
+    const summaryContainer = document.getElementById('processedFilesContainer');
+    const links = summaryContainer.getElementsByTagName('a'); // Get all links
+
+    Array.from(links).forEach(link => {
+        const anchor = document.createElement('a');
+        anchor.href = link.href;
+        anchor.download = ""; // Suggest downloading the file
+        anchor.click();
+    });
 }
