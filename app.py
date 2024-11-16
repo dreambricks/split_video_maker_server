@@ -1,14 +1,9 @@
 import json
 import os
-import uuid
-import zipfile
-import time
 from flask import Flask, request, send_file, jsonify, render_template, abort
-from werkzeug.utils import secure_filename
 from logging_config import setup_logging
 import logging
 from video_stacker import stack_videos_vertically_with_loop
-import traceback
 from utils import generate_datetime_filename, generate_datetime_unique_string
 import threading
 from directory_cleaner import DirectoryCleaner
@@ -42,11 +37,13 @@ directories_to_clean = [
 ]
 directory_cleaner = DirectoryCleaner(directories_to_clean, age_limit_days=2, check_interval_seconds=7200)
 
+
 def process_videos(primary_file_path, secondary_file_path, output_file_path, status_path, job_path, output_link):
     with semaphore:
         stack_videos_vertically_with_loop(
             primary_file_path, secondary_file_path, output_file_path,
             status_path, job_path, output_link)
+
 
 @app.route('/alive')
 def alive():
@@ -151,6 +148,7 @@ def serve_video(job_code, filename):
         abort(404)
 
     return send_file(file_path, as_attachment=True)
+
 
 if __name__ == "__main__":
     directory_cleaner.start() # Start the cleaner thread
