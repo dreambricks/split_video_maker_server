@@ -214,27 +214,62 @@ function checkProcessingProgress(filename, index, jobCode, response) {
 
 // Function to display the processed file summary box
 function displayProcessedFileSummary(primaryFileName, secondaryFileName, downloadLink) {
-  const summaryContainer = document.getElementById('processedFilesContainer'); // Use existing container to add summaries
+    const summaryContainer = document.getElementById('processedFilesContainer');
 
-  const summaryBox = document.createElement('div');
-  summaryBox.className = 'summary-box';
+    const summaryBox = document.createElement('div');
+    summaryBox.className = 'summary-box';
 
-  // Close button
-  const closeButton = document.createElement('span');
-  closeButton.className = 'close-btn';
-  closeButton.innerHTML = '&times;'; // HTML code for "×"
-  closeButton.onclick = () => summaryBox.remove(); // Remove box when clicked
-  summaryBox.appendChild(closeButton);
+    const closeButton = document.createElement('span');
+    closeButton.className = 'close-btn';
+    closeButton.innerHTML = '&times;';
+    closeButton.onclick = () => {
+        summaryBox.remove();
+        updateCloseAllButton(); // Check if the "Close All" button needs to be updated
+    };
+    summaryBox.appendChild(closeButton);
 
-  const title = document.createElement('p');
-  title.innerHTML = `<strong>Download the split video:</strong>`;
-  summaryBox.appendChild(title);
+    const title = document.createElement('p');
+    title.innerHTML = `<strong>Download the split video:</strong>`;
+    summaryBox.appendChild(title);
 
-  const downloadLinkElement = document.createElement('a');
-  downloadLinkElement.href = downloadLink;
-  downloadLinkElement.innerText = `${primaryFileName} + ${secondaryFileName}`;
-  downloadLinkElement.target = "_blank"; // Open link in a new tab
-  summaryBox.appendChild(downloadLinkElement);
+    const downloadLinkElement = document.createElement('a');
+    downloadLinkElement.href = downloadLink;
+    downloadLinkElement.innerText = `${primaryFileName} + ${secondaryFileName}`;
+    downloadLinkElement.target = "_blank";
+    summaryBox.appendChild(downloadLinkElement);
 
-  summaryContainer.appendChild(summaryBox); // Add the summary box to the container
+    summaryContainer.appendChild(summaryBox);
+
+    // Add animation
+    setTimeout(() => summaryBox.classList.add('show'), 10);
+
+    // Update the "Close All" button
+    updateCloseAllButton();
+}
+
+function updateCloseAllButton() {
+    const summaryContainer = document.getElementById('processedFilesContainer');
+    const boxes = summaryContainer.getElementsByClassName('summary-box');
+    const closeAllButton = document.getElementById('closeAllButton');
+
+    if (boxes.length >= 2) {
+        if (!closeAllButton) {
+            // Create "Close All" button
+            const buttonsContainer = document.getElementById('dynamicButtonsContainer');
+            const button = document.createElement('button');
+            button.id = 'closeAllButton';
+            button.innerText = 'Close All';
+            button.onclick = () => {
+                // Remove all summary boxes
+                while (boxes.length > 0) {
+                    boxes[0].remove();
+                }
+                updateCloseAllButton(); // Update the button's visibility
+            };
+            buttonsContainer.appendChild(button);
+        }
+    } else if (closeAllButton) {
+        // Remove the "Close All" button if fewer than 2 boxes
+        closeAllButton.remove();
+    }
 }

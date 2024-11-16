@@ -81,3 +81,32 @@
 .summary-box .close-btn:hover {
   color: #ff1a1a;
 }
+
+#closeAllButton {
+    margin: 10px 0;
+    padding: 10px 20px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#closeAllButton:hover {
+    background-color: #ff1a1a;
+}
+
+.summary-box {
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    padding: 10px;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
+    color: #ff4d4d;
+}
