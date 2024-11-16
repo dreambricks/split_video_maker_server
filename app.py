@@ -11,7 +11,7 @@ from video_stacker import stack_videos_vertically_with_loop
 import traceback
 from utils import generate_datetime_filename, generate_datetime_unique_string
 import threading
-
+from directory_cleaner import DirectoryCleaner
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -36,6 +36,11 @@ processed_videos = []
 # Limit to 3 threads
 semaphore = threading.Semaphore(3)
 
+directories_to_clean = [
+    UPLOAD_FOLDER,
+    PROCESSING_FOLDER,
+]
+directory_cleaner = DirectoryCleaner(directories_to_clean, age_limit_days=2, check_interval_seconds=7200)
 
 def process_videos(primary_file_path, secondary_file_path, output_file_path, status_path, job_path, output_link):
     with semaphore:
@@ -148,6 +153,8 @@ def serve_video(job_code, filename):
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
+    directory_cleaner.start() # Start the cleaner thread
+
     #context = ('static/fullchain.pem', 'static/privkey.pem')
     #app.run(host='0.0.0.0', ssl_context=context)
     app.run()
