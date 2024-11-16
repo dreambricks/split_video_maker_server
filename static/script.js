@@ -65,11 +65,11 @@ function uploadSecondaryFile(file, index, jobCode) {
         const response = JSON.parse(xhr.responseText);
         document.getElementById(`statusText${index}`).innerText = `Upload complete for ${file.name}.`;
 
-        // Remove the box after 3 seconds
+        // Remove the box after 1.5 seconds
         setTimeout(() => {
           const wrapper = document.getElementById(`statusText${index}`).parentNode;
           wrapper.remove();
-        }, 3000);
+        }, 1500);
 
         resolve(response); // Resolve with the file path & job code returned by the server
       } else {
@@ -102,11 +102,11 @@ function uploadPrimaryFile(file, index, secondaryFilePath, jobCode) {
 
   xhr.onload = () => {
     if (xhr.status === 200) {
-      // document.getElementById(`statusText${index}`).innerText = `Upload complete for ${file.name}.`;
+      document.getElementById(`filenameText${index}`).innerText = `Processing ${file.name}`;
 
       const response = JSON.parse(xhr.responseText);
       secondaryFilename = getFilename(secondaryFilePath);
-      document.getElementById(`statusText${index}`).innerText = `Processing ${file.name} and ${secondaryFilename}...`;
+      document.getElementById(`statusText${index}`).innerText = `with ${secondaryFilename}...`;
       checkProcessingProgress(response.file, index, jobCode, response);
     } else {
       document.getElementById(`statusText${index}`).innerText = `Upload failed for ${file.name}.`;
@@ -121,6 +121,7 @@ function createProgressBars(file, index, requiresProcessing) {
   wrapper.className = 'progress-wrapper';
 
   const fileName = document.createElement('p');
+  fileName.id = `filenameText${index}`;
   fileName.innerText = `Uploading ${file.name}`;
   wrapper.appendChild(fileName);
 
@@ -143,45 +144,6 @@ function createProgressBars(file, index, requiresProcessing) {
   document.getElementById('progressContainer').appendChild(wrapper);
 }
 
-function uploadFile(file, index, requiresProcessing) {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/upload', true);
-
-  xhr.upload.onprogress = (event) => {
-    if (event.lengthComputable) {
-      const percentComplete = (event.loaded / event.total) * 100;
-      document.getElementById(`uploadProgress${index}`).style.width = percentComplete + '%';
-      document.getElementById(`statusText${index}`).innerText = `Uploading ${file.name}: ${Math.round(percentComplete)}%`;
-    }
-  };
-
-  xhr.onload = () => {
-    if (xhr.status === 200) {
-      document.getElementById(`statusText${index}`).innerText = `Upload complete for ${file.name}.`;
-
-      if (requiresProcessing) {
-        // Start processing if required
-        const response = JSON.parse(xhr.responseText);
-        document.getElementById(`statusText${index}`).innerText = `Processing ${file.name}...`;
-        checkProcessingProgress(response.file, index);
-      } else {
-        // For secondary file, remove the box after 10 seconds
-        setTimeout(() => {
-          const wrapper = document.getElementById(`statusText${index}`).parentNode;
-          wrapper.remove();
-        }, 10000); // 10 seconds delay
-      }
-    } else {
-      document.getElementById(`statusText${index}`).innerText = `Upload failed for ${file.name}.`;
-    }
-  };
-
-  xhr.send(formData);
-}
-
 function checkProcessingProgress(filename, index, jobCode, response) {
   const intervalId = setInterval(() => {
     fetch(`/progress/${jobCode}/${filename}`)
@@ -192,7 +154,7 @@ function checkProcessingProgress(filename, index, jobCode, response) {
 
         if (progress === "100") {
           clearInterval(intervalId);
-          document.getElementById(`statusText${index}`).innerText = `${filename} processing complete!`;
+          document.getElementById(`filenameText${index}`).innerText = `${filename} processing complete!`;
 
           fetch(`/details/${jobCode}/${filename}`)
             .then(response2 => response2.json())
@@ -202,11 +164,11 @@ function checkProcessingProgress(filename, index, jobCode, response) {
               displayProcessedFileSummary(data2.video1, data2.video2, data2.out_video);
           });
 
-          // Remove the progress bars and status after 5 seconds
+          // Remove the progress bars and status after 3 seconds
           setTimeout(() => {
             const wrapper = document.getElementById(`statusText${index}`).parentNode;
             wrapper.remove();
-          }, 5000); // 5 seconds delay
+          }, 3000); // 3 seconds delay
         }
       });
   }, 500); // Check every 500 ms
