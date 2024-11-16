@@ -7,35 +7,34 @@
     <title>Split Video Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/progress_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
-<body class="bg-black text-white font-sans h-screen flex flex-col">
+<body class="body-style">
 
-    <header class="bg-gray-800 text-center py-5 text-2xl">
+    <header class="header-style">
         Split Video Generator
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center gap-6 p-6 relative">
-        <div class="spinner" id="spinner"></div>
-
-        <label for="video1" class="text-lg">Creators videos:</label>
+    <main class="main-style">
+        <label for="video1" class="label-style">Creators videos:</label>
         <input type="file" id="video1" name="video1" accept=".mp4, .mkv, .mov" multiple required
-            class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="input-style">
 
-        <label for="video2" class="text-lg">Sponsor video:</label>
+        <label for="video2" class="label-style">Sponsor video:</label>
         <input type="file" id="video2" name="video2" accept=".mp4, .mkv, .mov" required
-            class="p-3 bg-white text-black rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="input-style">
 
-        <button id="uploadButton"
-            class="btn bg-gray-700 hover:bg-gray-600 text-white px-3 py-4 rounded text-lg cursor-pointer">
-            Generate Split Videos</button>
+        <button id="uploadButton" class="button-style">
+            Generate Split Videos
+        </button>
 
         <div id="dynamicButtonsContainer"></div>
         <div id="processedFilesContainer"></div>
         <div id="progressContainer"></div>
     </main>
 
-    <footer class="h-96 bg-cover bg-center" style="background-image: url('/static/surubao.jpg');"></footer>
+    <footer class="footer-style"></footer>
 
     <script src="/static/script.js"></script>
 </body>
