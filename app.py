@@ -120,6 +120,7 @@ def progress(job_code, filename):
         return jsonify({"processing_progress": progress}), 200
     return jsonify({"processing_progress": "100"}), 200  # Return 100 if processing is complete
 
+
 @app.route('/details/<job_code>/<filename>')
 def details(job_code, filename):
     """Check processing progress of a specific file."""
@@ -136,75 +137,6 @@ def details(job_code, filename):
 
     # Return a link to the processed primary file
     return jsonify({'error': f"details file doesn't exist: {str(details_path)}"}), 500
-
-
-@app.route('/upload_videos', methods=['POST'])
-def upload_videos():
-    video1 = request.files['video1']
-    video2 = request.files['video2']
-
-    if video1.filename == '' or video2.filename == '':
-        return jsonify({'error': 'Um dos arquivos não foi enviado corretamente.'}), 400
-
-    video1_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(video1.filename))
-    video2_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(video2.filename))
-    video1.save(video1_path)
-    video2.save(video2_path)
-
-    source_files.extend([video1_path, video2_path])
-
-    video1_basename, _ = os.path.splitext(os.path.basename(video1_path))
-    video2_basename, _ = os.path.splitext(os.path.basename(video2_path))
-    output_filename = generate_datetime_filename(f"out_{video1_basename}_{video2_basename}", "mp4")
-    output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
-
-    try:
-        stack_videos_vertically_with_loop(video1_path, video2_path, output_path)
-        processed_videos.append(output_filename)
-    except Exception as e:
-        logger.error(f"Erro ao processar os vídeos: {str(e)}")
-        logger.error(traceback.format_exc())
-        return jsonify({'error': f'Erro ao processar os vídeos: {str(e)}'}), 500
-
-    # Retorna a URL direta para o vídeo processado
-    return jsonify({'video_url': f'/videos/{output_filename}'}), 200
-
-
-@app.route('/finalize_uploads', methods=['POST'])
-def finalize_uploads():
-    """Rota para excluir todos os arquivos 'source' após o upload e processamento."""
-    try:
-        for file_path in source_files:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        source_files.clear()  # Limpa a lista após remover os arquivos
-        return jsonify({'message': 'Arquivos source removidos com sucesso.'}), 200
-    except Exception as e:
-        logger.error(f"Erro ao remover arquivos: {str(e)}")
-        logger.error(traceback.format_exc())
-        return jsonify({'error': f'Erro ao remover arquivos: {str(e)}'}), 500
-
-
-@app.route('/download_zip')
-def download_zip():
-    if not processed_videos:
-        return jsonify({'error': 'Nenhum vídeo processado disponível para download.'}), 400
-
-    zip_filename = f"videos_{uuid.uuid4()}.zip"
-    zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
-
-    # Cria o ZIP com os vídeos processados
-    try:
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            for filename in processed_videos:
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                zipf.write(file_path, filename)
-    except Exception as e:
-        logger.error(f"Erro ao criar o arquivo ZIP: {str(e)}")
-        logger.error(traceback.format_exc())
-        return jsonify({'error': f'Erro ao criar o arquivo ZIP: {str(e)}'}), 500
-
-    return send_file(zip_path, as_attachment=True)
 
 
 @app.route('/videos/<job_code>/<filename>')
