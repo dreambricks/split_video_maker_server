@@ -97,6 +97,16 @@
 }
 
 .summary-box {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+.summary-box.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.summary-box {
     border: 1px solid #ccc;
     margin: 5px 0;
     padding: 10px;
